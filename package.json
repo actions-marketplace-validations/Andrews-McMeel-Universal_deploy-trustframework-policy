@@ -1,8 +1,8 @@
 {
-  "name": "typescript-action",
-  "version": "0.0.0",
+  "name": "deploy-trustframework-policy",
+  "version": "5.5.0",
   "private": true,
-  "description": "TypeScript template action",
+  "description": "Deploy Azure AD B2C Custom Trust Framework Policy",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/actions/deploy-trustframework-policy.git"
   },
   "keywords": [
     "actions",
@@ -34,6 +34,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.4.2",
+    "@types/xmldom": "^0.1.31",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vercel/ncc": "^0.36.1",
