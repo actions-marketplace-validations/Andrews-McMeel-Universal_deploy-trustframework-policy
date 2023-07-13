@@ -51,6 +51,8 @@ jobs:
         renumberSteps: false
 ```
 
+---
+
 ## Building the Project
 
 ### Packaging the Project
@@ -102,3 +104,18 @@ To test the GitHub Action create your own repo, add the workflow. Then configure
 - name: 'Upload custom policies'
   uses: azure-ad-b2c/deploy-trustframework-policy@vNext
 ```
+
+---
+
+## Reusable Workflow Integration
+
+Once a pull request is merged into _main_, you can create a new release to use it as a reusable workflow. To create a new release, follow the instructions in this guide: [Creating a Release](https://amuniversal.atlassian.net/wiki/spaces/TD/pages/3452043300/Creating+a+new+GitHub+Release#Creating-a-release)
+
+### Update Major Release
+
+Once you've created a new release, you can use the [Update Major Release Workflow](https://github.com/Andrews-McMeel-Universal/deploy-trustframework-policy/actions/workflows/update-major-release.yaml) to automatically update the major release tag for the repository.
+
+1. Navigate to the [Update Major Release](https://github.com/Andrews-McMeel-Universal/deploy-trustframework-policy/actions/workflows/update-major-release.yaml) workflow.
+1. Press "Run workflow" on the right-hand side of the page.
+1. Specify the tag to create a major release for and what the major release will be.
+1. Click "Run workflow"
