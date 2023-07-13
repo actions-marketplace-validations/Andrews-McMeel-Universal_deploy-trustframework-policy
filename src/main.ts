@@ -1,15 +1,16 @@
 // Polyfill for graph client
-import { Client } from '@microsoft/microsoft-graph-client'
-import { ClientCredentialsAuthProvider } from './auth'; const core = require('@actions/core')
+import {Client} from '@microsoft/microsoft-graph-client'
+import {ClientCredentialsAuthProvider} from './auth'
+const core = require('@actions/core')
 const fs = require('fs')
 const path = require('path')
-const fsPromises = require('fs').promises;
-(global as any).fetch = require('node-fetch')
+const fsPromises = require('fs').promises
+;(global as any).fetch = require('node-fetch')
 const Readable = require('stream').Readable
 const fg = require('fast-glob')
 
 // XML parsing
-const { DOMParser } = require('xmldom')
+const {DOMParser} = require('xmldom')
 
 enum DeploymentType {
   None,
@@ -30,7 +31,6 @@ class Settings {
 }
 
 async function run(): Promise<void> {
-
   const settings: Settings = new Settings()
   try {
     settings.folder = core.getInput('folder')
@@ -38,9 +38,14 @@ async function run(): Promise<void> {
     settings.tenant = core.getInput('tenant')
     settings.clientId = core.getInput('clientId')
     settings.clientSecret = core.getInput('clientSecret')
-    settings.addAppInsightsStep = core.getInput('addAppInsightsStep')  === true || core.getInput('addAppInsightsStep') === 'true'
-    settings.renumberSteps = core.getInput('renumberSteps')  === true || core.getInput('renumberSteps') === 'true'
-    settings.verbose = core.getInput('verbose')  === true || core.getInput('verbose') === 'true'
+    settings.addAppInsightsStep =
+      core.getInput('addAppInsightsStep') === true ||
+      core.getInput('addAppInsightsStep') === 'true'
+    settings.renumberSteps =
+      core.getInput('renumberSteps') === true ||
+      core.getInput('renumberSteps') === 'true'
+    settings.verbose =
+      core.getInput('verbose') === true || core.getInput('verbose') === 'true'
     let deploymentType = DeploymentType.None
 
     core.info('Deploy custom policy GitHub Action started.')
@@ -66,14 +71,12 @@ async function run(): Promise<void> {
       core.setFailed("The 'tenant' parameter is missing.")
     }
 
-    if (settings.clientSecret === ''
-    ) {
+    if (settings.clientSecret === '') {
       core.setFailed(`The 'clientSecret' parameter is missing.`)
     }
 
     // Print the input parameters
-    if (settings.verbose)
-      core.info(JSON.stringify(settings))
+    if (settings.verbose) core.info(JSON.stringify(settings))
 
     // Create OAuth2 client
     const client = Client.initWithMiddleware({
@@ -86,45 +89,43 @@ async function run(): Promise<void> {
     })
 
     // Create an array of policy files
-    let filesArray = settings.files.split(",")
+    let filesArray = settings.files.split(',')
 
-    if (settings.files === "*") {
+    if (settings.files === '*') {
       deploymentType = DeploymentType.All
-      filesArray = await fg([`${settings.folder}/**/*.xml`], { dot: true })
-    }
-    else if (settings.files.indexOf(".json") > 0) {
+      filesArray = await fg([`${settings.folder}/**/*.xml`], {dot: true})
+    } else if (settings.files.indexOf('.json') > 0) {
       deploymentType = DeploymentType.JSON
       if (!fs.existsSync(`.github/workflows/${settings.files}`)) {
-        core.setFailed(`Can't find the .github/workflows/${settings.files} file`)
+        core.setFailed(
+          `Can't find the .github/workflows/${settings.files} file`
+        )
       }
 
-      const deploymentFile = fs.readFileSync(`.github/workflows/${settings.files}`)
+      const deploymentFile = fs.readFileSync(
+        `.github/workflows/${settings.files}`
+      )
       const deploymentJson = JSON.parse(deploymentFile)
 
       filesArray = deploymentJson.files
-    }
-    else {
+    } else {
       deploymentType = DeploymentType.CommaDelimiter
     }
 
     core.info(`Deployment type: ${DeploymentType[deploymentType]}.`)
 
     for (const f of filesArray) {
-
       let filePath = ''
 
       if (deploymentType === DeploymentType.All) {
         filePath = f.trim()
-      }
-      else if (deploymentType === DeploymentType.JSON) {
+      } else if (deploymentType === DeploymentType.JSON) {
         filePath = path.join(settings.folder, f.path.trim())
-      }
-      else if (deploymentType === DeploymentType.CommaDelimiter) {
+      } else if (deploymentType === DeploymentType.CommaDelimiter) {
         filePath = path.join(settings.folder, f.trim())
       }
 
       if (filePath.length > 0 && fs.existsSync(filePath)) {
-
         // Get the policy name
         let policyName = ''
         const policyFile = await fsPromises.readFile(filePath)
@@ -132,19 +133,24 @@ async function run(): Promise<void> {
 
         const result = policyXML.match(/(?<=\bPolicyId=")[^"]*/gm)
 
-        if (result && result.length > 0)
-          policyName = result[0]
+        if (result && result.length > 0) policyName = result[0]
 
         // Replace yourtenant.onmicrosoft.com with the tenant name parameter
-        if (policyXML.indexOf("yourtenant.onmicrosoft.com") > 0) {
+        if (policyXML.indexOf('yourtenant.onmicrosoft.com') > 0) {
           //core.info(`Policy ${filePath} replacing yourtenant.onmicrosoft.com with ${tenant}.`)
-          policyXML = policyXML.replace(new RegExp("yourtenant.onmicrosoft.com", "gi"), settings.tenant)
+          policyXML = policyXML.replace(
+            new RegExp('yourtenant.onmicrosoft.com', 'gi'),
+            settings.tenant
+          )
         }
 
         // Use the deployment JSON file to find and replace in the custom policy file
-        if (deploymentType === DeploymentType.JSON && f.replacements !== undefined) {
+        if (
+          deploymentType === DeploymentType.JSON &&
+          f.replacements !== undefined
+        ) {
           for (const r of f.replacements) {
-            policyXML = policyXML.replace(new RegExp(r.find, "gi"), r.replace)
+            policyXML = policyXML.replace(new RegExp(r.find, 'gi'), r.replace)
           }
         }
 
@@ -158,12 +164,11 @@ async function run(): Promise<void> {
           policyXML = renumberOrchestrationSteps(policyXML)
         }
 
-        if (settings.verbose)
-          core.info(policyXML)
+        if (settings.verbose) core.info(policyXML)
 
         const fileStream = new Readable()
         fileStream.push(policyXML)
-        fileStream.push(null)      // Indicates end of file/stream
+        fileStream.push(null) // Indicates end of file/stream
 
         // Upload the policy
         const response = await client
@@ -171,12 +176,10 @@ async function run(): Promise<void> {
           .putStream(fileStream)
 
         core.info(`Policy ${filePath} successfully uploaded.`)
-      }
-      else {
+      } else {
         core.warning(`Policy ${filePath} not found.`)
       }
     }
-
   } catch (error: any) {
     core.info(`Deployment Failed`)
     core.info(error)
@@ -186,31 +189,39 @@ async function run(): Promise<void> {
 }
 
 function addAppInsightsOrchestrationStep(xmlStringDocument: string) {
+  const xmlDoc = new DOMParser().parseFromString(
+    xmlStringDocument,
+    'application/xml'
+  )
 
-  const xmlDoc = new DOMParser().parseFromString(xmlStringDocument, "application/xml")
-
-
-  const UserJourneys = xmlDoc.getElementsByTagName("UserJourney")
+  const UserJourneys = xmlDoc.getElementsByTagName('UserJourney')
 
   // Iterate through all user journeys
   for (let uj = 0; uj < UserJourneys.length; uj++) {
-    const ParentOrchestrationSteps = UserJourneys[uj].getElementsByTagName("OrchestrationSteps")
+    const ParentOrchestrationSteps =
+      UserJourneys[uj].getElementsByTagName('OrchestrationSteps')
 
     //<OrchestrationStep Order="1" Type="ClaimsExchange"><ClaimsExchanges><ClaimsExchange Id="AppInsights-Start" TechnicalProfileReferenceId="AppInsights-Start" /></ClaimsExchanges></OrchestrationStep>
-    const OrchestrationStep = xmlDoc.createElement("OrchestrationStep")
-    OrchestrationStep.setAttribute("Type", "ClaimsExchange")
-    OrchestrationStep.setAttribute("Order", "1")
+    const OrchestrationStep = xmlDoc.createElement('OrchestrationStep')
+    OrchestrationStep.setAttribute('Type', 'ClaimsExchange')
+    OrchestrationStep.setAttribute('Order', '1')
 
-    const ClaimsExchanges = xmlDoc.createElement("ClaimsExchanges")
-    const ClaimsExchange = xmlDoc.createElement("ClaimsExchange")
-    ClaimsExchange.setAttribute("Id", "AppInsights-Start")
-    ClaimsExchange.setAttribute("TechnicalProfileReferenceId", "AppInsights-Start")
+    const ClaimsExchanges = xmlDoc.createElement('ClaimsExchanges')
+    const ClaimsExchange = xmlDoc.createElement('ClaimsExchange')
+    ClaimsExchange.setAttribute('Id', 'AppInsights-Start')
+    ClaimsExchange.setAttribute(
+      'TechnicalProfileReferenceId',
+      'AppInsights-Start'
+    )
 
     OrchestrationStep.appendChild(ClaimsExchanges)
     ClaimsExchanges.appendChild(ClaimsExchange)
 
     // There is only one OrchestrationSteps element in a UserJourney, add the new element at the first place
-    ParentOrchestrationSteps[0].insertBefore(OrchestrationStep, ParentOrchestrationSteps[0].firstChild)
+    ParentOrchestrationSteps[0].insertBefore(
+      OrchestrationStep,
+      ParentOrchestrationSteps[0].firstChild
+    )
   }
 
   return xmlDoc.documentElement.toString()
@@ -218,16 +229,19 @@ function addAppInsightsOrchestrationStep(xmlStringDocument: string) {
 
 // Renumber documents' user journeys, or sub journeys
 function renumberOrchestrationSteps(xmlStringDocument: string) {
-
-  const xmlDoc = new DOMParser().parseFromString(xmlStringDocument, "application/xml")
-  const UserJourneys = xmlDoc.getElementsByTagName("UserJourney")
+  const xmlDoc = new DOMParser().parseFromString(
+    xmlStringDocument,
+    'application/xml'
+  )
+  const UserJourneys = xmlDoc.getElementsByTagName('UserJourney')
 
   for (let uj = 0; uj < UserJourneys.length; uj++) {
-    const OrchestrationSteps = UserJourneys[uj].getElementsByTagName("OrchestrationStep")
+    const OrchestrationSteps =
+      UserJourneys[uj].getElementsByTagName('OrchestrationStep')
 
     if (OrchestrationSteps !== null && OrchestrationSteps !== undefined) {
       for (let os = 0; os < OrchestrationSteps.length; os++) {
-        OrchestrationSteps[os].setAttribute("Order", os + 1)
+        OrchestrationSteps[os].setAttribute('Order', os + 1)
       }
     }
   }
@@ -236,8 +250,6 @@ function renumberOrchestrationSteps(xmlStringDocument: string) {
 }
 
 run()
-
-
 
 // import * as core from '@actions/core'
 // import {wait} from './wait'
