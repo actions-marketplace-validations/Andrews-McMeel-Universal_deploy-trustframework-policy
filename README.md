@@ -1,5 +1,7 @@
 # GitHub Action for Deploying Azure AD B2C custom policies
 
+This is a fork of the [azure-ad-b2c/deploy-trustframework-policy](https://github.com/azure-ad-b2c/deploy-trustframework-policy) repository to add in additional error handling and other QOL improvements.
+
 Use this GitHub Action to deploy an [Azure AD B2C custom policy](https://docs.microsoft.com/azure/active-directory-b2c/custom-policy-overview) into your Azure Active Directory B2C tenant using the [Microsoft Graph API](https://docs.microsoft.com/graph/api/resources/trustframeworkpolicy?view=graph-rest-beta). If the policy does not yet exist, it will be created. If the policy already exists, it will be replaced.
 
 For more information, see [Deploy Azure AD B2C custom policy with GitHub actions](https://docs.microsoft.com/azure/active-directory-b2c/deploy-custom-policies-github-action).
