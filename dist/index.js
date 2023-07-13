@@ -120,7 +120,7 @@ function run() {
             settings.renumberSteps = core.getInput('renumberSteps') === true || core.getInput('renumberSteps') === 'true';
             settings.verbose = core.getInput('verbose') === true || core.getInput('verbose') === 'true';
             let deploymentType = DeploymentType.None;
-            core.info('Deploy custom policy GitHub Action v5.3 started.');
+            core.info('Deploy custom policy GitHub Action started');
             if (settings.clientId === 'test') {
                 core.info('GitHub Action test successfully completed.');
                 return;
