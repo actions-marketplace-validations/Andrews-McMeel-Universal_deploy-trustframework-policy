@@ -1,0 +1,5 @@
+.github/workflows/pr-checks.yml
+.github/workflows/pr-clean-caches.yml
+.github/workflows/template-sync.yml
+action.yaml
+README.md

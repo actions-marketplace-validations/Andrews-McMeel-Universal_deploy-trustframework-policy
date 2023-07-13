@@ -1,9 +1,13 @@
-name: 'Deploy Azure AD B2C custom policy'
-description: 'A GitHub Action for deploying Azure AD B2C policies using the Microsoft Graph API'
-author: 'Azure AD B2C GitHub Community'
+name: Deploy Azure AD B2C custom policy
+
+description: A GitHub Action for deploying Azure AD B2C policies using the Microsoft Graph API
+
+author: Azure AD B2C GitHub Community
+
 branding:
-  icon: 'code'
-  color: 'blue'
+  icon: code
+  color: blue
+
 inputs:
   folder:
     description: 'The folder where the custom policies files are stored'
@@ -32,6 +36,7 @@ inputs:
     description: 'Log level verbose.'
     required: false
     default: 'false'
+
 runs:
   using: 'node12'
   main: 'dist/index.js'

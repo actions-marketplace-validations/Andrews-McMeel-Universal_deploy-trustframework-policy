@@ -1,0 +1,73 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  action-build-and-test:
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    name: Test Action with Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install npm dependencies
+        run: |
+          npm install
+
+      - name: Run action
+        run: |
+          npm run all
+
+  action-clean-test:
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    name: Test Action w/o Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Uses an action in the root directory
+        uses: ./
+        with:
+          clientId: test
+          milliseconds: 1000
+
+  pr-labels:
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    name: PR Labels
+    uses: Andrews-McMeel-Universal/reusable_workflows/.github/workflows/pr-labels.yaml@2
+    secrets:
+      PAT_ACTION_CI: ${{ secrets.PAT_ACTION_CI }}
+
+  codeowners-validation:
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    name: Codeowners File Validation
+    uses: Andrews-McMeel-Universal/reusable_workflows/.github/workflows/codeowners-validation.yaml@2
+
+  jira-lint:
+    if: ${{ github.actor != 'dependabot[bot]' && github.actor != 'amutechtest' && github.ref != 'refs/heads/development' && github.ref != 'refs/heads/main' }}
+    name: Jira PR Linter
+    uses: Andrews-McMeel-Universal/reusable_workflows/.github/workflows/jira-lint.yaml@2
+    with:
+      fail-on-error: false
+      skip-comments: true
+    secrets:
+      JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+
+  lint:
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    name: Simple Lint
+    uses: Andrews-McMeel-Universal/reusable_workflows/.github/workflows/simple-lint.yaml@2
+    secrets:
+      PAT_ACTION_CI: ${{ secrets.PAT_ACTION_CI }}
+
+  required-checks:
+    name: Required Checks
+    runs-on: ubuntu-latest
+    needs: [action-build-and-test,action-clean-test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
